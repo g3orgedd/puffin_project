@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CIFF/XML Editor (VideoJet DM Presets)</title>
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- Exact DataMatrix (ECC200) renderer -->
+  <script src="https://unpkg.com/bwip-js/dist/bwip-js-min.js"></script>
+</head>
+<body>
+<header>
+  <div class="row">
+    <div class="brand"><span class="dot"></span> CIFF/XML Editor (VideoJet DM Presets)</div>
+    <input id="fileInput" type="file" accept=".xml,.ciff,.txt,.design,.label,*/*" />
+    <button id="parseBtn" class="primary">Parse / Обновить из текста</button>
+    <button id="addFieldBtn" class="primary">+ Добавить поле</button>
+    <button id="downloadBtn" class="primary">Скачать .ciff</button>
+    <button id="resetBtn" class="danger">Сброс</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- Left -->
+  <section class="card">
+    <div class="title">
+      <h2>Исходный XML / CIFF</h2>
+      <div class="status" id="status"></div>
+    </div>
+    <div class="body">
+      <textarea id="xmlText" spellcheck="false" placeholder="Вставь XML сюда или загрузи файл…"></textarea>
+      <div class="hint">
+        DataMatrix предпросмотр — точный (ECC200), рендер через bwip-js. Для офлайна библиотеку можно положить локально.
+      </div>
+    </div>
+  </section>
+
+  <!-- Middle -->
+  <section class="card">
+    <div class="title">
+      <h2>Предпросмотр</h2>
+      <div class="row">
+        <span class="pill">Колёсико: зум</span>
+        <span class="pill">Drag: X/Y</span>
+        <span class="pill">Shift+Drag: пан</span>
+      </div>
+    </div>
+    <div class="body canvasWrap">
+      <canvas id="cnv" width="1200" height="900"></canvas>
+      <div class="hint">
+        Поля с <span class="kbd">&lt;Displayed&gt;0&lt;/Displayed&gt;</span> (“Non-Printed”) рисуются штриховой рамкой.
+      </div>
+    </div>
+  </section>
+
+  <!-- Right -->
+  <section class="card">
+    <div class="title">
+      <h2>Поля</h2>
+      <div class="row">
+        <input id="search" type="text" placeholder="Поиск по имени/типу…" />
+      </div>
+    </div>
+    <div class="body">
+      <div class="list" id="fieldList"></div>
+
+      <hr class="divider" />
+
+      <div id="editorEmpty" class="muted small">Выбери поле слева, чтобы редактировать.</div>
+
+      <div id="editor" style="display:none;">
+        <div class="row" style="justify-content:space-between; margin-bottom:10px;">
+          <div>
+            <div class="edName" id="edName"></div>
+            <div class="muted small" id="edType"></div>
+          </div>
+          <div class="row">
+            <button id="applyBtn" class="primary">Применить</button>
+            <button id="deleteBtn" class="danger">Удалить</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label>Name</label>
+            <input id="edNameInput" type="text" />
+          </div>
+          <div class="field">
+            <label>FldType</label>
+            <input id="edTypeInput" type="text" disabled />
+          </div>
+
+          <div class="field"><label>X</label><input id="edX" type="number" step="1" /></div>
+          <div class="field"><label>Y</label><input id="edY" type="number" step="1" /></div>
+          <div class="field"><label>W</label><input id="edW" type="number" step="1" /></div>
+          <div class="field"><label>H</label><input id="edH" type="number" step="1" /></div>
+
+          <div class="field">
+            <label>Orientation</label>
+            <select id="edOri">
+              <option value="">(нет)</option>
+              <option value="0">0</option>
+              <option value="90">90</option>
+              <option value="180">180</option>
+              <option value="270">270</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Скрыть при печати (Displayed=0)</label>
+            <select id="edDisplayed">
+              <option value="1">Нет (Displayed=1)</option>
+              <option value="0">Да (Displayed=0)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- FixedText -->
+        <div class="block" id="textBlock" hidden>
+          <div class="field">
+            <label>CalcData</label>
+            <input id="edCalc" type="text" />
+          </div>
+          <div class="field" style="margin-top:10px;">
+            <label>UserEnterData (если есть)</label>
+            <input id="edUser" type="text" />
+          </div>
+        </div>
+
+        <!-- Barcode -->
+        <div class="block" id="barcodeBlock" hidden>
+          <div class="row" style="justify-content:space-between; align-items:flex-end;">
+            <div class="field" style="flex:1;">
+              <label>VideoJet пресет (по инструкции)</label>
+              <select id="presetSelect">
+                <option value="short22">Укороченный 22×22 (C1 GTIN C2 SN C3 KRIPTO)</option>
+                <option value="std36">Стандартный 36×36 (… + C4 KRIPTO2)</option>
+              </select>
+            </div>
+            <button id="applyPresetBtn" class="primary">Применить пресет</button>
+          </div>
+
+          <div class="grid" style="margin-top:10px;">
+            <div class="field"><label>DataMatrix SymbolSize</label><input id="edSymbol" type="text" /></div>
+            <div class="field"><label>DataMatrix ModuleSize</label><input id="edModule" type="number" step="1" /></div>
+          </div>
+
+          <div class="field" style="margin-top:10px;">
+            <label>CalcData (строка для кодирования)</label>
+            <input id="edBarcodeCalc" type="text" />
+          </div>
+
+          <div class="row" style="margin-top:10px; justify-content:space-between;">
+            <div class="muted small">Редактор структуры Data/Object 👇</div>
+            <div class="row">
+              <button class="btnsm primary" id="addObjBtn">+ Object</button>
+              <button class="btnsm primary" id="buildCalcBtn">Собрать CalcData</button>
+            </div>
+          </div>
+
+          <div class="objWrap" id="objEditor"></div>
+          <div class="hint">Пресет выставляет строгий порядок Index (как Merge Field).</div>
+        </div>
+
+        <div class="hint">
+          Горячие клавиши: <span class="kbd">Ctrl/Cmd+S</span> скачать .ciff
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Add Field Modal -->
+<div class="modalOverlay" id="modalOverlay">
+  <div class="modal">
+    <div class="mhead">
+      <div class="mheadTitle">Добавить поле</div>
+      <div class="row"><button id="closeModalBtn">Закрыть</button></div>
+    </div>
+    <div class="mbody">
+      <div class="grid">
+        <div class="field">
+          <label>FldType</label>
+          <select id="newType">
+            <option value="FixedText">FixedText</option>
+            <option value="Barcode">Barcode (DataMatrix)</option>
+          </select>
+        </div>
+        <div class="field"><label>Name</label><input id="newName" type="text" placeholder="NEW_FIELD" /></div>
+        <div class="field"><label>X</label><input id="newX" type="number" step="1" value="100" /></div>
+        <div class="field"><label>Y</label><input id="newY" type="number" step="1" value="100" /></div>
+        <div class="field"><label>W</label><input id="newW" type="number" step="1" value="800" /></div>
+        <div class="field"><label>H</label><input id="newH" type="number" step="1" value="300" /></div>
+        <div class="field">
+          <label>Orientation</label>
+          <select id="newOri">
+            <option value="">(нет)</option>
+            <option value="0">0</option><option value="90">90</option><option value="180">180</option><option value="270">270</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Скрыть при печати</label>
+          <select id="newDisplayed">
+            <option value="1">Нет (Displayed=1)</option>
+            <option value="0">Да (Displayed=0)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:12px;">
+        <label>Начальный CalcData</label>
+        <input id="newCalc" type="text" />
+      </div>
+
+      <div class="grid" style="margin-top:12px;" id="newBarcodeExtra" hidden>
+        <div class="field"><label>SymbolSize</label><input id="newSymbol" type="text" value="22X22" /></div>
+        <div class="field"><label>ModuleSize</label><input id="newModule" type="number" step="1" value="58" /></div>
+      </div>
+
+      <div class="row" style="margin-top:14px; justify-content:flex-end;">
+        <button id="createFieldBtn" class="primary">Создать</button>
+      </div>
+
+      <div class="hint">Для Barcode можно потом применить VideoJet пресет.</div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="./scripts/main.js"></script>
+</body>
+</html>
