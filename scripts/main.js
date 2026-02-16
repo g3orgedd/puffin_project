@@ -3,7 +3,7 @@ import { $, setStatus, readTextFile } from './dom.js';
 import { parseXmlString, extractFields, serializeCiff, getText, setText, getSubImageNode } from './xml.js';
 import { draw, getCanvas, hitTestField, canvasToScreenCoords, screenToWorldCoords } from './preview.js';
 import { renderFieldList, selectField, applyEdits, deleteSelected } from './fieldEditor.js';
-import { wireAddFieldModal } from './addFieldModal.js';
+import { wireAddFieldModal, quickAddField } from './addFieldModal.js';
 import { addObject, buildBarcodeCalcFromObjects, renderObjectEditor } from './objectEditor.js';
 import { PRESETS } from './presets.js';
 
@@ -281,8 +281,41 @@ function wireCanvas(){
 
 // ======= Wire UI =======
 function wireUi(){
-  $('parseBtn').addEventListener('click', parseFromTextarea);
   $('search').addEventListener('input', renderFieldList);
+
+  $('quickAddTextBtn').addEventListener('click', () => quickAddField({
+    type: 'FixedText',
+    name: `TEXT_${state.fields.length + 1}`,
+    calc: 'Новый текст',
+    w: 800,
+    h: 260
+  }));
+
+  $('quickAddDateBtn').addEventListener('click', () => quickAddField({
+    type: 'FixedText',
+    name: `DATE_${state.fields.length + 1}`,
+    calc: new Date().toISOString().slice(0, 10),
+    w: 500,
+    h: 220
+  }));
+
+  $('quickAddTimeBtn').addEventListener('click', () => quickAddField({
+    type: 'FixedText',
+    name: `TIME_${state.fields.length + 1}`,
+    calc: new Date().toTimeString().slice(0, 8),
+    w: 420,
+    h: 220
+  }));
+
+  $('quickAddDmBtn').addEventListener('click', () => quickAddField({
+    type: 'Barcode',
+    name: `DM_${state.fields.length + 1}`,
+    calc: '010000000000000021SERIAL123',
+    w: 520,
+    h: 520,
+    symbol: '22X22',
+    module: 58
+  }));
 
   $('applyBtn').addEventListener('click', applyEdits);
   $('deleteBtn').addEventListener('click', deleteSelected);
@@ -319,12 +352,39 @@ function wireUi(){
   });
 }
 
+
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = $('themeToggleBtn');
+  if (!btn) return;
+  const isDark = theme !== 'light';
+  const moonIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.8 3.5a8.5 8.5 0 1 0 5.7 14.9 8 8 0 0 1-5.7-14.9z"/></svg>';
+  const sunIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.3M12 19.2v2.3M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.3M19.2 12h2.3M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>';
+  btn.innerHTML = `<span class="themeIcon">${isDark ? moonIcon : sunIcon}</span>`;
+  btn.title = isDark ? 'Включить светлую тему' : 'Включить тёмную тему';
+  btn.setAttribute('aria-label', btn.title);
+}
+
+function wireThemeToggle(){
+  const saved = localStorage.getItem('ui-theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initial = saved || (prefersDark ? 'dark' : 'light');
+  applyTheme(initial);
+
+  $('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    localStorage.setItem('ui-theme', next);
+    applyTheme(next);
+  });
+}
 function init(){
+  wireThemeToggle();
   wireUi();
   wireAddFieldModal();
   wireCanvas();
   draw();
-  setStatus(true, 'Готово. Загрузите .ciff/.xml или вставьте XML.');
+  setStatus(true, 'Готово. Загрузите .ciff/.xml файл и начните редактирование.');
 }
 
 init();
