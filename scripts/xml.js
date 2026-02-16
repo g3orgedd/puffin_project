@@ -74,8 +74,13 @@ function ensureCdataInSerialized(xmlStr){
 export function serializeCiff(doc){
   const s = new XMLSerializer();
   let xml = s.serializeToString(doc);
-  xml = xml.replace(/></g, '>\n<');
   xml = ensureCdataInSerialized(xml);
+
+  const declaration = '<?xml version="1.0" encoding="UTF-16"?>';
+  if (!xml.startsWith('<?xml')){
+    xml = `${declaration}
+${xml}`;
+  }
   return xml;
 }
 
