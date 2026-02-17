@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { $ } from './dom.js';
-import { getText, isHiddenOnPrint } from './xml.js';
+import { getText, isHiddenOnPrint, getPrintAreaSize } from './xml.js';
 
 const cnv = $('cnv');
 const ctx = cnv.getContext('2d');
@@ -21,7 +21,7 @@ function fitCanvas(){
 
 function drawGrid(){
   ctx.save();
-  ctx.globalAlpha = 0.25;
+  ctx.globalAlpha = 0.2;
   const grid = 100 * state.zoom;
   ctx.beginPath();
   for (let x = (state.panX % grid); x < cnv.width; x += grid){
@@ -30,10 +30,38 @@ function drawGrid(){
   for (let y = (state.panY % grid); y < cnv.height; y += grid){
     ctx.moveTo(0, y); ctx.lineTo(cnv.width, y);
   }
-  ctx.strokeStyle = '#2b3b55';
+  ctx.strokeStyle = '#bdb5c8';
   ctx.lineWidth = 1;
   ctx.stroke();
   ctx.restore();
+}
+
+function drawPrintArea(){
+  const size = getPrintAreaSize(state.xmlDoc);
+  const topLeft = worldToScreen(0, 0);
+  const sw = size.width * state.zoom;
+  const sh = size.height * state.zoom;
+
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#b9b0c8';
+  ctx.lineWidth = 2;
+  ctx.fillRect(topLeft.x, topLeft.y, sw, sh);
+  ctx.strokeRect(topLeft.x, topLeft.y, sw, sh);
+  ctx.restore();
+}
+
+function getTemplateFontSize(field){
+  const candidates = ['FontSize', 'CharSize', 'TextSize', 'FontHeight'];
+  for (const tag of candidates){
+    const raw = parseInt(getText(field.node, tag, ''), 10);
+    if (Number.isFinite(raw) && raw > 0) return raw;
+  }
+
+  if (field.h > 0){
+    return Math.max(10, Math.round(field.h * 0.72));
+  }
+  return 42;
 }
 
 function tryRenderDataMatrix(field, sx, sy, sw, sh){
@@ -46,7 +74,7 @@ function tryRenderDataMatrix(field, sx, sy, sw, sh){
     ctx.save();
     ctx.globalAlpha = 0.85;
     ctx.font = `12px ${getComputedStyle(document.body).fontFamily}`;
-    ctx.fillStyle = '#ffb3b3';
+    ctx.fillStyle = '#7a1c17';
     ctx.fillText('bwip-js не загружен (CDN)', sx+6, sy+16);
     ctx.restore();
     return;
@@ -74,7 +102,7 @@ function tryRenderDataMatrix(field, sx, sy, sw, sh){
     ctx.save();
     ctx.globalAlpha = 0.9;
     ctx.font = `12px ${getComputedStyle(document.body).fontFamily}`;
-    ctx.fillStyle = '#ffb3b3';
+    ctx.fillStyle = '#7a1c17';
     ctx.fillText('Ошибка DM: ' + String(e).slice(0, 70), sx+6, sy+16);
     ctx.restore();
   }
@@ -83,7 +111,14 @@ function tryRenderDataMatrix(field, sx, sy, sw, sh){
 export function draw(){
   fitCanvas();
   ctx.clearRect(0,0,cnv.width, cnv.height);
+
+  ctx.save();
+  ctx.fillStyle = '#f3eef6';
+  ctx.fillRect(0, 0, cnv.width, cnv.height);
+  ctx.restore();
+
   drawGrid();
+  drawPrintArea();
 
   state.fields.forEach((f, idx) => {
     const p = worldToScreen(f.x, f.y);
@@ -96,8 +131,8 @@ export function draw(){
 
     ctx.save();
     ctx.lineWidth = isSel ? 3 : (isHover ? 2 : 1);
-    ctx.strokeStyle = isSel ? '#4aa3ff' : (isHover ? '#b6d9ff' : '#6a86aa');
-    ctx.fillStyle = isSel ? 'rgba(74,163,255,0.12)' : 'rgba(74,163,255,0.05)';
+    ctx.strokeStyle = isSel ? '#6750a4' : (isHover ? '#8670bf' : '#8c84a1');
+    ctx.fillStyle = isSel ? 'rgba(103,80,164,0.08)' : 'rgba(103,80,164,0.03)';
 
     if (hidden){
       ctx.setLineDash([6,6]);
@@ -113,10 +148,11 @@ export function draw(){
       tryRenderDataMatrix(f, p.x, p.y, sw, sh);
     } else if (type === 'fixedtext'){
       const txt = getText(f.node, 'CalcData', '');
+      const templateFontPx = getTemplateFontSize(f) * state.zoom;
       ctx.save();
-      ctx.globalAlpha = 0.95;
-      ctx.fillStyle = '#e6edf3';
-      ctx.font = `${Math.max(10, 14*state.zoom)}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#000000';
+      ctx.font = `${Math.max(10, templateFontPx)}px ${getComputedStyle(document.body).fontFamily}`;
       const pad = 6;
       const ori = getText(f.node,'Orientation','');
       if (ori === '270'){
@@ -132,7 +168,7 @@ export function draw(){
     ctx.save();
     ctx.globalAlpha = 0.95;
     ctx.font = `${Math.max(10, 11*state.zoom)}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
-    ctx.fillStyle = '#e6edf3';
+    ctx.fillStyle = '#2e2837';
     const label = `${f.name}${f.type ? ' • ' + f.type : ''}${hidden ? ' • hidden' : ''}`;
     ctx.fillText(label, p.x + 4, p.y + Math.max(12, 12*state.zoom));
     ctx.restore();
@@ -143,7 +179,7 @@ export function draw(){
   ctx.save();
   ctx.globalAlpha = 0.75;
   ctx.font = `12px ${getComputedStyle(document.body).fontFamily}`;
-  ctx.fillStyle = '#9fb0c0';
+  ctx.fillStyle = '#625b71';
   ctx.fillText(`zoom=${state.zoom.toFixed(3)}  pan=(${Math.round(state.panX)},${Math.round(state.panY)})`, 12, cnv.height - 14);
   ctx.restore();
 }
