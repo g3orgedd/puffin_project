@@ -6,7 +6,9 @@ import { renderObjectEditor } from './objectEditor.js';
 
 export function renderFieldList(){
   const list = $('fieldList');
-  const q = $('search').value.trim().toLowerCase();
+  const searchEl = $('search');
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  if (!list) return;
   list.innerHTML = '';
 
   state.fields.forEach((f, idx) => {

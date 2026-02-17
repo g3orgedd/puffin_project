@@ -43,9 +43,11 @@ function resetAll(){
   state.xmlDoc = null;
   state.fields = [];
   state.selectedIndex = -1;
-  $('fieldList').innerHTML = '';
+  const list = $('fieldList');
+  if (list) list.innerHTML = '';
   $('xmlText').value = '';
-  $('search').value = '';
+  const searchEl = $('search');
+  if (searchEl) searchEl.value = '';
   selectField(-1);
   setStatus(true, 'Сброшено');
   draw();
@@ -282,7 +284,8 @@ function wireCanvas(){
 // ======= Wire UI =======
 function wireUi(){
   $('parseBtn').addEventListener('click', parseFromTextarea);
-  $('search').addEventListener('input', renderFieldList);
+  const searchEl = $('search');
+  if (searchEl) searchEl.addEventListener('input', renderFieldList);
 
   $('applyBtn').addEventListener('click', applyEdits);
   $('deleteBtn').addEventListener('click', deleteSelected);
