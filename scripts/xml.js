@@ -31,6 +31,18 @@ export function isHiddenOnPrint(fieldNode){
   return v === '0';
 }
 
+export function getPrintAreaSize(doc){
+  if (!doc) return { width: 3200, height: 1200 };
+
+  const width = parseInt(getText(doc, 'MaxImageWidth', '3200'), 10);
+  const height = parseInt(getText(doc, 'MaxImageHeight', '1200'), 10);
+
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : 3200,
+    height: Number.isFinite(height) && height > 0 ? height : 1200
+  };
+}
+
 export function parseXmlString(raw){
   const p = new DOMParser();
   const doc = p.parseFromString(raw, 'application/xml');
