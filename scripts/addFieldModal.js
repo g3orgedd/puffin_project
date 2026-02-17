@@ -6,6 +6,7 @@ import { draw } from './preview.js';
 
 function updateNewFieldUI(){
   $('newBarcodeExtra').hidden = ($('newType').value !== 'Barcode');
+  $('newTextExtra').hidden = ($('newType').value !== 'FixedText');
 }
 
 function ensureChildText(parent, tag, value){
@@ -29,7 +30,7 @@ function createFieldNode(opts){
   setText(field, 'H', opts.h);
   setText(field, 'Ln', '1');
   if (opts.ori !== '') setText(field, 'Orientation', opts.ori);
-  setText(field, 'Displayed', opts.displayed);
+  if (opts.displayed === '0') setText(field, 'Displayed', '0');
   setText(field, 'CalcData', opts.calc ?? '');
 
   if (opts.type === 'Barcode'){
@@ -51,12 +52,22 @@ function createFieldNode(opts){
   }
 
   if (opts.type === 'FixedText'){
+    field.appendChild(state.xmlDoc.createElement('LoggedField'));
+
     const data = state.xmlDoc.createElement('Data');
     const obj = state.xmlDoc.createElement('Object');
+    obj.setAttribute('Reference', '');
     ensureChildText(obj,'DataType','0');
-    ensureChildText(obj,'Default', opts.calc ?? '');
+    ensureChildText(obj,'MaxNoOfChars', String(opts.maxChars ?? 4));
+    ensureChildText(obj,'Default', opts.defaultValue ?? opts.calc ?? '');
     data.appendChild(obj);
     field.appendChild(data);
+
+    const text = state.xmlDoc.createElement('Text');
+    const font = state.xmlDoc.createElement('Font');
+    ensureChildText(font, 'Pitch', String(opts.pitch ?? 8));
+    text.appendChild(font);
+    field.appendChild(text);
   }
 
   return field;
@@ -73,6 +84,9 @@ function openAddFieldModal(defaults = {}){
   $('newW').value = String(defaults.w ?? 800);
   $('newH').value = String(defaults.h ?? 300);
   $('newDisplayed').value = defaults.displayed === '0' ? '0' : '1';
+  $('newDefault').value = defaults.defaultValue ?? defaults.calc ?? '';
+  $('newMaxChars').value = String(defaults.maxChars ?? 4);
+  $('newPitch').value = String(defaults.pitch ?? 8);
   $('newSymbol').value = defaults.symbol ?? '22X22';
   $('newModule').value = String(defaults.module ?? 58);
 
@@ -113,6 +127,9 @@ export function wireAddFieldModal(){
       ori: $('newOri').value,
       displayed: $('newDisplayed').value === '0' ? '0' : '1',
       calc: $('newCalc').value ?? '',
+      defaultValue: $('newDefault').value ?? '',
+      maxChars: parseInt($('newMaxChars').value || '4', 10) || 4,
+      pitch: parseInt($('newPitch').value || '8', 10) || 8,
       symbol: $('newSymbol').value ?? '22X22',
       module: parseInt($('newModule').value||'58',10) || 58
     };

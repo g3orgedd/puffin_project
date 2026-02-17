@@ -56,10 +56,20 @@ export function selectField(idx){
 
   if (isFixedText){
     $('edCalc').value = getText(f.node,'CalcData','');
+    const dataNode = f.node.getElementsByTagName('Data')[0];
+    const objNode = dataNode ? dataNode.getElementsByTagName('Object')[0] : null;
+    const fontNode = f.node.getElementsByTagName('Font')[0];
+    $('edDefault').value = objNode ? getText(objNode, 'Default', '') : '';
+    $('edMaxChars').value = objNode ? getText(objNode, 'MaxNoOfChars', '') : '';
+    $('edPitch').value = fontNode ? getText(fontNode, 'Pitch', '') : '';
+
     const userNode = f.node.getElementsByTagName('UserEnterData')[0];
     $('edUser').value = userNode ? (userNode.textContent ?? '') : '';
   } else {
     $('edCalc').value = '';
+    $('edDefault').value = '';
+    $('edMaxChars').value = '';
+    $('edPitch').value = '';
     $('edUser').value = '';
   }
 
@@ -103,11 +113,30 @@ export function applyEdits(){
   const oriVal = $('edOri').value;
   if (oriVal === '') removeTag(f.node,'Orientation'); else setText(f.node,'Orientation',oriVal);
 
-  setText(f.node,'Displayed', $('edDisplayed').value === '0' ? '0' : '1');
+  if ($('edDisplayed').value === '0') setText(f.node,'Displayed','0');
+  else removeTag(f.node,'Displayed');
 
   const type = (f.type||'').toLowerCase();
   if (type === 'fixedtext'){
     setText(f.node,'CalcData', $('edCalc').value ?? '');
+
+    let data = f.node.getElementsByTagName('Data')[0];
+    if (!data){ data = state.xmlDoc.createElement('Data'); f.node.appendChild(data); }
+    let obj = data.getElementsByTagName('Object')[0];
+    if (!obj){ obj = state.xmlDoc.createElement('Object'); data.appendChild(obj); }
+    if (!obj.hasAttribute('Reference')) obj.setAttribute('Reference', '');
+    setText(obj,'DataType','0');
+    setText(obj,'MaxNoOfChars', $('edMaxChars').value || '0');
+    setText(obj,'Default', $('edDefault').value ?? '');
+
+    let textNode = f.node.getElementsByTagName('Text')[0];
+    if (!textNode){ textNode = state.xmlDoc.createElement('Text'); f.node.appendChild(textNode); }
+    let fontNode = textNode.getElementsByTagName('Font')[0];
+    if (!fontNode){ fontNode = state.xmlDoc.createElement('Font'); textNode.appendChild(fontNode); }
+    if (($('edPitch').value || '').trim() !== '') setText(fontNode,'Pitch', $('edPitch').value);
+
+    let loggedField = f.node.getElementsByTagName('LoggedField')[0];
+    if (!loggedField){ loggedField = state.xmlDoc.createElement('LoggedField'); f.node.appendChild(loggedField); }
   }
   if (type === 'barcode'){
     setText(f.node,'CalcData', $('edBarcodeCalc').value ?? '');

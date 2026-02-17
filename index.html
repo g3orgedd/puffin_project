@@ -129,6 +129,11 @@
             <label>CalcData</label>
             <input id="edCalc" type="text" />
           </div>
+          <div class="grid" style="margin-top:10px;">
+            <div class="field"><label>Default</label><input id="edDefault" type="text" /></div>
+            <div class="field"><label>MaxNoOfChars</label><input id="edMaxChars" type="number" step="1" min="0" /></div>
+            <div class="field"><label>Pitch</label><input id="edPitch" type="number" step="1" min="1" /></div>
+          </div>
           <div class="field" style="margin-top:10px;">
             <label>UserEnterData (если есть)</label>
             <input id="edUser" type="text" />
@@ -216,6 +221,12 @@
       <div class="field" style="margin-top:12px;">
         <label>Начальный CalcData</label>
         <input id="newCalc" type="text" />
+      </div>
+
+      <div class="grid" style="margin-top:12px;" id="newTextExtra">
+        <div class="field"><label>Default</label><input id="newDefault" type="text" /></div>
+        <div class="field"><label>MaxNoOfChars</label><input id="newMaxChars" type="number" step="1" min="0" value="4" /></div>
+        <div class="field"><label>Pitch (Font size)</label><input id="newPitch" type="number" step="1" min="1" value="8" /></div>
       </div>
 
       <div class="grid" style="margin-top:12px;" id="newBarcodeExtra" hidden>
