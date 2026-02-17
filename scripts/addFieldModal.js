@@ -8,6 +8,25 @@ function updateNewFieldUI(){
   $('newBarcodeExtra').hidden = ($('newType').value !== 'Barcode');
 }
 
+function openAddFieldModal(prefill = {}){
+  if (!state.xmlDoc){ setStatus(false, 'Сначала загрузите XML/CIFF файл'); return; }
+
+  $('newType').value = prefill.type ?? 'FixedText';
+  $('newName').value = prefill.name ?? '';
+  $('newCalc').value = prefill.calc ?? '';
+  $('newDisplayed').value = prefill.displayed ?? '1';
+  $('newX').value = prefill.x ?? 100;
+  $('newY').value = prefill.y ?? 100;
+  $('newW').value = prefill.w ?? 800;
+  $('newH').value = prefill.h ?? 300;
+  $('newOri').value = prefill.ori ?? '';
+  $('newSymbol').value = prefill.symbol ?? '22X22';
+  $('newModule').value = prefill.module ?? 58;
+
+  updateNewFieldUI();
+  openModal(true);
+}
+
 function ensureChildText(parent, tag, value){
   let el = parent.getElementsByTagName(tag)[0];
   if (!el){
@@ -65,13 +84,7 @@ function createFieldNode(opts){
 export function wireAddFieldModal(){
   $('newType').addEventListener('change', updateNewFieldUI);
 
-  $('addFieldBtn').addEventListener('click', () => {
-    if (!state.xmlDoc){ setStatus(false, 'Сначала загрузите/распарсьте XML'); return; }
-    $('newName').value = '';
-    $('newCalc').value = '';
-    updateNewFieldUI();
-    openModal(true);
-  });
+  $('addFieldBtn').addEventListener('click', () => openAddFieldModal());
 
   $('closeModalBtn').addEventListener('click', () => openModal(false));
   $('modalOverlay').addEventListener('click', (e) => { if (e.target === $('modalOverlay')) openModal(false); });
@@ -113,3 +126,5 @@ export function wireAddFieldModal(){
     openModal(false);
   });
 }
+
+export { openAddFieldModal };

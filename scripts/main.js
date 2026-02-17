@@ -3,7 +3,7 @@ import { $, setStatus, readTextFile } from './dom.js';
 import { parseXmlString, extractFields, serializeCiff, getText, setText, getSubImageNode } from './xml.js';
 import { draw, getCanvas, hitTestField, canvasToScreenCoords, screenToWorldCoords } from './preview.js';
 import { renderFieldList, selectField, applyEdits, deleteSelected } from './fieldEditor.js';
-import { wireAddFieldModal } from './addFieldModal.js';
+import { wireAddFieldModal, openAddFieldModal } from './addFieldModal.js';
 import { addObject, buildBarcodeCalcFromObjects, renderObjectEditor } from './objectEditor.js';
 import { PRESETS } from './presets.js';
 
@@ -51,11 +51,12 @@ function resetAll(){
   draw();
 }
 
-function parseFromTextarea(){
-  const raw = $('xmlText').value.trim();
+function parseFromInput(rawInput = null){
+  const raw = String(rawInput ?? $('xmlText').value).trim();
   if (!raw){ setStatus(false,'Пустой текст'); return; }
   try{
     state.xmlDoc = parseXmlString(raw);
+    $('xmlText').value = raw;
     extractFields();
     renderFieldList();
     selectField(-1);
@@ -281,7 +282,6 @@ function wireCanvas(){
 
 // ======= Wire UI =======
 function wireUi(){
-  $('parseBtn').addEventListener('click', parseFromTextarea);
   $('search').addEventListener('input', renderFieldList);
 
   $('applyBtn').addEventListener('click', applyEdits);
@@ -295,13 +295,54 @@ function wireUi(){
 
   $('applyPresetBtn').addEventListener('click', () => applyPresetToSelectedBarcode($('presetSelect').value));
 
+  $('addMatrixBtn').addEventListener('click', () => openAddFieldModal({
+    type: 'Barcode',
+    name: 'DATAMATRIX_1',
+    calc: '[DM_DATA]',
+    w: 420,
+    h: 420,
+    symbol: '22X22',
+    module: 58
+  }));
+
+  $('addTextBtn').addEventListener('click', () => openAddFieldModal({
+    type: 'FixedText',
+    name: 'TEXT_1',
+    calc: 'Текст',
+    w: 900,
+    h: 180
+  }));
+
+  $('addTimeBtn').addEventListener('click', () => openAddFieldModal({
+    type: 'FixedText',
+    name: 'TIME_1',
+    calc: '[TIME]',
+    w: 600,
+    h: 180
+  }));
+
+  $('addDateBtn').addEventListener('click', () => openAddFieldModal({
+    type: 'FixedText',
+    name: 'DATE_1',
+    calc: '[DATE]',
+    w: 600,
+    h: 180
+  }));
+
+  $('addCounterBtn').addEventListener('click', () => openAddFieldModal({
+    type: 'FixedText',
+    name: 'COUNTER_1',
+    calc: '[COUNTER]',
+    w: 700,
+    h: 180
+  }));
+
   $('fileInput').addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try{
       const text = await readTextFile(file);
-      $('xmlText').value = text;
-      parseFromTextarea();
+      parseFromInput(text);
     } catch(err){
       setStatus(false, 'Ошибка чтения: ' + String(err));
     } finally {
