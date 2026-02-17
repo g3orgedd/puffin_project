@@ -286,9 +286,14 @@ function wireUi(){
   $('quickAddTextBtn').addEventListener('click', () => quickAddField({
     type: 'FixedText',
     name: `TEXT_${state.fields.length + 1}`,
-    calc: 'Новый текст',
-    w: 800,
-    h: 260
+    calc: '~101',
+    defaultValue: '~101',
+    maxChars: 4,
+    pitch: 8,
+    x: 142,
+    y: 6400,
+    w: 642,
+    h: 325
   }));
 
   $('quickAddDateBtn').addEventListener('click', () => quickAddField({
