@@ -3,7 +3,7 @@ import { $, setStatus, readTextFile } from './dom.js';
 import { parseXmlString, extractFields, serializeCiff, getText, setText, getSubImageNode } from './xml.js';
 import { draw, getCanvas, hitTestField, canvasToScreenCoords, screenToWorldCoords } from './preview.js';
 import { renderFieldList, selectField, applyEdits, deleteSelected } from './fieldEditor.js';
-import { wireAddFieldModal } from './addFieldModal.js';
+import { wireAddFieldModal, openAddFieldModal } from './addFieldModal.js';
 import { addObject, buildBarcodeCalcFromObjects, renderObjectEditor } from './objectEditor.js';
 import { PRESETS } from './presets.js';
 
@@ -294,6 +294,44 @@ function wireUi(){
   $('buildCalcBtn').addEventListener('click', buildBarcodeCalcFromObjects);
 
   $('applyPresetBtn').addEventListener('click', () => applyPresetToSelectedBarcode($('presetSelect').value));
+
+  $('quickAddBarcodeBtn').addEventListener('click', () => openAddFieldModal({
+    type: 'Barcode',
+    name: 'DataMatrix',
+    calc: '[GTIN][SN][KRIPTO]',
+    w: 1100,
+    h: 1100,
+    symbol: '22X22',
+    module: 58
+  }));
+  $('quickAddTextBtn').addEventListener('click', () => openAddFieldModal({
+    type: 'FixedText',
+    name: 'Text',
+    calc: 'TEXT',
+    w: 900,
+    h: 320
+  }));
+  $('quickAddDateBtn').addEventListener('click', () => openAddFieldModal({
+    type: 'FixedText',
+    name: 'Date',
+    calc: 'DATE',
+    w: 640,
+    h: 320
+  }));
+  $('quickAddTimeBtn').addEventListener('click', () => openAddFieldModal({
+    type: 'FixedText',
+    name: 'Time',
+    calc: 'TIME',
+    w: 640,
+    h: 320
+  }));
+  $('quickAddCounterBtn').addEventListener('click', () => openAddFieldModal({
+    type: 'FixedText',
+    name: 'Counter',
+    calc: '000001',
+    w: 640,
+    h: 320
+  }));
 
   $('fileInput').addEventListener('change', async (e) => {
     const file = e.target.files?.[0];

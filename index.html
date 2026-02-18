@@ -25,14 +25,21 @@
   <!-- Left -->
   <section class="card">
     <div class="title">
-      <h2>Исходный XML / CIFF</h2>
+      <h2>Быстрое добавление</h2>
       <div class="status" id="status"></div>
     </div>
     <div class="body">
-      <textarea id="xmlText" spellcheck="false" placeholder="Вставь XML сюда или загрузи файл…"></textarea>
-      <div class="hint">
-        DataMatrix предпросмотр — точный (ECC200), рендер через bwip-js. Для офлайна библиотеку можно положить локально.
+      <div class="quickAddWrap">
+        <button id="quickAddBarcodeBtn" class="primary quickAddBtn">+ DataMatrix</button>
+        <button id="quickAddTextBtn" class="primary quickAddBtn">+ Текст</button>
+        <button id="quickAddDateBtn" class="primary quickAddBtn">+ Дата</button>
+        <button id="quickAddTimeBtn" class="primary quickAddBtn">+ Время</button>
+        <button id="quickAddCounterBtn" class="primary quickAddBtn">+ Счётчик</button>
       </div>
+      <div class="hint">
+        Кнопки открывают форму добавления поля с готовыми значениями. При необходимости параметры можно изменить перед созданием.
+      </div>
+      <textarea id="xmlText" spellcheck="false" placeholder="Вставь XML сюда или загрузи файл…" hidden></textarea>
     </div>
   </section>
 

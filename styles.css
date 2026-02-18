@@ -61,7 +61,7 @@ button.danger{
 }
 .wrap{
   display:grid;
-  grid-template-columns: 360px 1fr 560px;
+  grid-template-columns: 320px 1fr 560px;
   gap:14px;
   padding:14px;
   align-items:stretch;
@@ -90,6 +90,14 @@ button.danger{
   color: var(--muted);
 }
 .card .body{padding:12px 14px;}
+.quickAddWrap{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:10px;
+}
+.quickAddBtn{
+  width:100%;
+}
 textarea{
   width:100%;
   min-height:180px;
