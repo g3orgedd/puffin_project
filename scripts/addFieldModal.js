@@ -62,16 +62,39 @@ function createFieldNode(opts){
   return field;
 }
 
+function getUniqueName(baseName){
+  const base = (baseName || 'Field').trim() || 'Field';
+  if (!state.fields.some(f => f.name === base)) return base;
+  let i = 1;
+  while (state.fields.some(f => f.name === `${base}${i}`)) i += 1;
+  return `${base}${i}`;
+}
+
+export function openAddFieldModal(prefill = {}){
+  if (!state.xmlDoc){ setStatus(false, 'Сначала загрузите/распарсьте XML'); return; }
+
+  const type = prefill.type ?? 'FixedText';
+  $('newType').value = type;
+  updateNewFieldUI();
+
+  $('newName').value = getUniqueName(prefill.name ?? (type === 'Barcode' ? 'DataMatrix' : 'Field'));
+  $('newCalc').value = prefill.calc ?? '';
+  $('newX').value = String(prefill.x ?? 100);
+  $('newY').value = String(prefill.y ?? 100);
+  $('newW').value = String(prefill.w ?? 800);
+  $('newH').value = String(prefill.h ?? 300);
+  $('newOri').value = prefill.ori ?? '';
+  $('newDisplayed').value = prefill.displayed ?? '1';
+  $('newSymbol').value = prefill.symbol ?? '22X22';
+  $('newModule').value = String(prefill.module ?? 58);
+
+  openModal(true);
+}
+
 export function wireAddFieldModal(){
   $('newType').addEventListener('change', updateNewFieldUI);
 
-  $('addFieldBtn').addEventListener('click', () => {
-    if (!state.xmlDoc){ setStatus(false, 'Сначала загрузите/распарсьте XML'); return; }
-    $('newName').value = '';
-    $('newCalc').value = '';
-    updateNewFieldUI();
-    openModal(true);
-  });
+  $('addFieldBtn').addEventListener('click', () => openAddFieldModal());
 
   $('closeModalBtn').addEventListener('click', () => openModal(false));
   $('modalOverlay').addEventListener('click', (e) => { if (e.target === $('modalOverlay')) openModal(false); });
